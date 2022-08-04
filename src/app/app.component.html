@@ -1,0 +1,16 @@
+<div class="todolist">
+  <div class="title">Angular TodoList</div>
+  <div class="input-area">
+    <input #addtodoinput placeholder="add todo" class="input"/>
+    <div (click)="handleAddTodo()" class="btn add-btn">添加</div>
+    <!-- <div class="btn delete-checked-btn">删除选中</div> -->
+  </div>
+  <div class="list">
+    <div *ngFor="let todo of todos | async" class="item">
+      <div>
+        <input type="checkbox" value="{{todo.id}}"> {{todo.title}}
+      </div>
+      <div (click)="deleteTodo(todo.id)" class="btn delete-btn">删除</div>
+    </div>
+  </div>
+</div>

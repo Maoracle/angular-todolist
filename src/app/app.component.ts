@@ -1,32 +1,48 @@
-import { Component } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, ViewChild } from '@angular/core';
+import { select, Store } from '@ngrx/store'
+import { Observable, fromEvent } from 'rxjs'
+import { selectTodos } from './store/selectors/todo.selectors';
+import { filter, map } from 'rxjs/operators'
+import { Todo } from './store/reducers/todo.reducer'
+import { AppState } from './store'
+import { addTodo, deleteTodo } from './store/actions/todo.actions';
 
 @Component({
   selector: 'app-root',
-  template: `
-    <!--The content below is only a placeholder and can be replaced.-->
-    <div style="text-align:center" class="content">
-      <h1>
-        Welcome to {{title}}!
-      </h1>
-      <span style="display: block">{{ title }} app is running!</span>
-      <img width="300" alt="Angular Logo" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTAgMjUwIj4KICAgIDxwYXRoIGZpbGw9IiNERDAwMzEiIGQ9Ik0xMjUgMzBMMzEuOSA2My4ybDE0LjIgMTIzLjFMMTI1IDIzMGw3OC45LTQzLjcgMTQuMi0xMjMuMXoiIC8+CiAgICA8cGF0aCBmaWxsPSIjQzMwMDJGIiBkPSJNMTI1IDMwdjIyLjItLjFWMjMwbDc4LjktNDMuNyAxNC4yLTEyMy4xTDEyNSAzMHoiIC8+CiAgICA8cGF0aCAgZmlsbD0iI0ZGRkZGRiIgZD0iTTEyNSA1Mi4xTDY2LjggMTgyLjZoMjEuN2wxMS43LTI5LjJoNDkuNGwxMS43IDI5LjJIMTgzTDEyNSA1Mi4xem0xNyA4My4zaC0zNGwxNy00MC45IDE3IDQwLjl6IiAvPgogIDwvc3ZnPg==">
-    </div>
-    <h2>Here are some links to help you start: </h2>
-    <ul>
-      <li>
-        <h2><a target="_blank" rel="noopener" href="https://angular.io/tutorial">Tour of Heroes</a></h2>
-      </li>
-      <li>
-        <h2><a target="_blank" rel="noopener" href="https://angular.io/cli">CLI Documentation</a></h2>
-      </li>
-      <li>
-        <h2><a target="_blank" rel="noopener" href="https://blog.angular.io/">Angular blog</a></h2>
-      </li>
-    </ul>
-    
-  `,
+  templateUrl: './app.component.html',
   styles: []
 })
 export class AppComponent {
   title = 'angular-todolist';
+  @ViewChild('addtodoinput') addtodoinput!: ElementRef
+  todos: Observable<Todo[]>
+  constructor (private store: Store<AppState>) {
+    this.todos = this.store.pipe(select(selectTodos))
+  }
+
+  ngAfterViewInit () {
+    fromEvent<KeyboardEvent>(this.addtodoinput.nativeElement, 'keyup')
+      .pipe(
+        filter(event => event.key === 'Enter'),
+        map(event => (<HTMLInputElement>event.target).value),
+        map(title => title.trim()),
+        filter(title => title !== '')
+      ).subscribe(title => {
+        this.store.dispatch(addTodo({title}))
+        this.addtodoinput.nativeElement.value = ''
+      })
+  }
+
+  handleAddTodo () {
+    let title: string = this.addtodoinput.nativeElement.value
+    title = title.trim()
+    if (title !== '') {
+      this.store.dispatch(addTodo({title}))
+      this.addtodoinput.nativeElement.value = ''
+    }
+  }
+
+  deleteTodo (id: string) {
+    this.store.dispatch(deleteTodo({id}))
+  }
 }
